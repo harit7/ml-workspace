@@ -1,13 +1,14 @@
 
+import torch
+
 from ..abstract_clf import AbstractClassifier
-from .logistic_regression import  PyTorchLogisticRegression
 
 from .model_training import *
 from .clf_inference import *
 from .clf_get_embedding import *
-import torch
+
 from .lenet import *
-from .one_layer_softmax import OneLayerSoftmax
+from .linear_model import *
 from .cifar_small_net import CifarSmallNet
 from .resnet import ResNet18
 from .cifar_medium_net import CifarMediumNet
@@ -19,20 +20,22 @@ class PyTorchClassifier(AbstractClassifier):
         
         self.model_conf = model_conf 
         self.logger = logger 
+        model_name = model_conf.model_name
+      
+        if(model_name=='linear_model'):
+            self.model = LinearModel(model_conf)
 
-        if(model_conf['model_name']=='binary_logistic_regression'):
-            assert model_conf['num_classes']==2 
-            self.model= PyTorchLogisticRegression(model_conf,logger)
-        if(model_conf['model_name']=='lenet'):
-            self.model = LeNet5(model_conf['num_classes'])
-        if(model_conf['model_name']=='one_layer_softmax'):
-            self.model = OneLayerSoftmax(model_conf['num_classes'])
-        if(model_conf['model_name']=='cifar_small_net'):
-            self.model = CifarSmallNet(model_conf['num_classes'])
-        if(model_conf['model_name']=='resnet18'):
-            self.model = ResNet18(model_conf['num_classes'])
-        if(model_conf['model_name']=='cifar_med_net'):
-            self.model = CifarMediumNet(model_conf['num_classes'])
+        if(model_name=='lenet'):
+            self.model = LeNet5(model_conf)
+
+        if(model_name=='cifar_small_net'):
+            self.model = CifarSmallNet(model_conf)
+
+        if(model_name=='resnet18'):
+            self.model = ResNet18(model_conf)
+
+        if(model_name=='cifar_med_net'):
+            self.model = CifarMediumNet(model_conf)
             
     
     def fit(self,dataset,training_conf,val_set=None):
@@ -50,7 +53,7 @@ class PyTorchClassifier(AbstractClassifier):
 
     def get_grad_embedding(self,dataset, inference_conf):
         clf_embedding = ClassifierEmbedding(self.logger)
-        return clf_embedding.get_gard_embedding(self.model,dataset,inference_conf)
+        return clf_embedding.get_grad_embedding(self.model,dataset,inference_conf)
 
     def get_embedding(self,dataset, inference_conf):
         clf_embedding = ClassifierEmbedding(self.logger)

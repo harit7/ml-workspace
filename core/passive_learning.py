@@ -27,9 +27,9 @@ class PassiveLearning:
     def run(self):
         logger =self.logger
         conf = self.conf 
-        train_conf = conf['training_conf']
-        model_conf = conf['model_conf']
-        inference_conf = conf['inference_conf']
+        train_conf = conf.training_conf
+        model_conf = conf.model_conf
+        inference_conf = conf.inference_conf
 
         out = {}
         
@@ -39,31 +39,30 @@ class PassiveLearning:
 
         logger.info('Train data size: {}'.format(n_train))
 
-        if(train_conf['ckpt_load_path'] == 'None' or train_conf['train_from_scratch'] ==True  ):
-            # create a new model for training. make it part of config...            
-            self.cur_clf = models.clf_factory.get_classifier(model_conf,self.logger)
-            train_conf['train_from_scratch'] = True
+        if(train_conf.ckpt_load_path is not None):
+            logger.info('Loading model from path: {}'.format(train_conf.ckpt_load_path))
+            self.load_state(train_conf.ckpt_load_path)
+
         else:
-            logger.info('Loading model from path: {}'.format(train_conf['ckpt_load_path']))
-            self.load_state(train_conf['ckpt_load_path'])
+            # create a new model for training.         
+            self.cur_clf = models.clf_factory.get_classifier(model_conf,self.logger)
         
-        if(train_conf['train_from_scratch'] or train_conf['train_from_ckpt']):
-            logger.info('--------------- Begin Model Training ------------')
-            
-            logger.info('Training conf :{}'.format(train_conf))
-            logger.info('Model conf : {}'.format(model_conf))
+        logger.info('--------------- Begin Model Training ------------')
+        
+        logger.info('Training conf :{}'.format(train_conf))
+        logger.info('Model conf : {}'.format(model_conf))
 
-            self.cur_clf = self.train_model(train_ds,model_conf, train_conf,val_set = self.ds_val)
-            logger.info('--------------- End Model Training ------------')
+        self.cur_clf = self.train_model(train_ds,model_conf, train_conf,val_set = self.ds_val)
+        logger.info('--------------- End Model Training ------------')
 
 
-        if(train_conf['save_ckpt'] and train_conf['ckpt_save_path'] is not None):
+        if(train_conf.ckpt_save_path is not None):
             logger.info('Saved model checkpoint to path')
-            self.save_state(train_conf['ckpt_save_path'])
+            self.save_state(train_conf.ckpt_save_path)
         
         # get validation error..
-        '''
-        train_err = self.get_test_error(self.cur_clf,cur_train_ds,inference_conf)
+        
+        train_err = self.get_test_error(self.cur_clf,train_ds,inference_conf)
         val_err = self.get_test_error(self.cur_clf,self.ds_val,inference_conf)
         test_err = self.get_test_error(self.cur_clf,self.ds_test,inference_conf)
         out['train_error'] = train_err
@@ -71,16 +70,12 @@ class PassiveLearning:
         out['test_error'] = test_err 
         self.cur_test_err = test_err 
         self.cur_val_err = val_err 
-        
-
         self.cur_train_err = train_err
-        '''
-        
-        if(conf['store_model_weights_in_mem']):
-            out['clf_weights'] = self.cur_clf.get_weights()
 
+        logger.info(f'Training Error : {train_err}  Validation Error : {val_err}  Test Error : {test_err}')
         
-        if train_conf['store_embedding']: # save the embeddings
+        
+        if(train_conf.embedding_save_path is not None): # save the embeddings
             
             embeddings = {}
             
@@ -96,12 +91,10 @@ class PassiveLearning:
             embeddings["val_embed"] =  [val_embeddings,self.ds_val.Y]
             embeddings["test_embed"] =  [test_embeddings,self.ds_test.Y]
 
-            out["embed"] = embeddings
-
-        if self.conf["dump_result"]:
-            fpath_out = train_conf['ckpt_save_path']+"pl_embed_samples_"+str(len(cur_train_ds))+"_seed_"+str(self.random_seed)+"_epoch_0.pkl"
-            with open(fpath_out, 'wb') as handle:
+            out["embed"] = embeddings 
+            with open(train_conf.embedding_save_path, 'wb') as handle:
                 pickle.dump(out, handle) 
+            
         
         return out 
     
@@ -120,7 +113,7 @@ class PassiveLearning:
 
     def load_state(self,path):
         checkpoint = torch.load(path)
-        if(self.conf['model_conf']['lib']=='pytorch'):
-            self.cur_clf = models.clf_factory.get_classifier(self.conf['model_conf'],self.logger)
+        if(self.conf.model_conf.lib=='pytorch'):
+            self.cur_clf = models.clf_factory.get_classifier(self.conf.model_conf,self.logger)
             self.cur_clf.model.load_state_dict(checkpoint['model_state_dict'])
         

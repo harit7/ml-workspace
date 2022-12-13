@@ -3,9 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class CifarMediumNet(nn.Module):
-    def __init__(self, n_classes=10):
+    def __init__(self, model_conf):
         super(CifarMediumNet,self).__init__()
-        self.n_classes = n_classes
+        self.n_classes = model_conf.num_classes
+        
         self.criterion = nn.CrossEntropyLoss()
         self.network = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, padding=1),

@@ -9,9 +9,12 @@ from collections import OrderedDict
 
 class LeNet5(nn.Module):
 
-    def __init__(self, n_classes=10):
+    def __init__(self,model_conf):
+
         super(LeNet5, self).__init__()
-        self.n_classes = n_classes
+        
+        self.n_classes = model_conf.num_classes
+
         self.feature_extractor = nn.Sequential(            
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1),
             nn.Tanh(),
@@ -26,7 +29,7 @@ class LeNet5(nn.Module):
         self.classifier = nn.Sequential(    
             nn.Linear(in_features=120, out_features=84),
             nn.Tanh(),   
-            nn.Linear(in_features=84, out_features=n_classes),
+            nn.Linear(in_features=84, out_features=self.n_classes),
         )
         self.criterion = nn.CrossEntropyLoss()
 

@@ -5,9 +5,9 @@ import torch.nn.functional as F
 # batch size 128; adam; learning rate 0.001;
 
 class CifarSmallNet(nn.Module):
-    def __init__(self, n_classes=10):
+    def __init__(self,model_conf):
         super(CifarSmallNet,self).__init__()
-        self.n_classes = n_classes
+        self.n_classes = model_conf.num_classes
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)

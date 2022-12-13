@@ -18,12 +18,12 @@ class ClassifierEmbedding:
         inference_conf.setdefault('shuffle',False)
         inference_conf.setdefault('device','cpu')
         
-        device = inference_conf['device']
-        data_loader = DataLoader(dataset=dataset,batch_size= inference_conf['batch_size'], shuffle=inference_conf['shuffle'])
+        device = inference_conf.device
+        data_loader = DataLoader(dataset=dataset,batch_size= inference_conf.batch_size, shuffle=inference_conf.shuffle)
 
         model = model.to(device)
 
-        self.logger.info("Running get embedding on {}, batch size {}".format(device,inference_conf['batch_size']))
+        self.logger.info("Running get embedding on {}, batch size {}".format(device,inference_conf.batch_size))
         with torch.no_grad():
             model.eval() 
             lst_embedding = []
@@ -35,7 +35,7 @@ class ClassifierEmbedding:
             out['embedding'] = torch.Tensor(np.array(lst_embedding))
             return out 
 
-    def get_gard_embedding(self,model,dataset,inference_conf={}):
+    def get_grad_embedding(self,model,dataset,inference_conf={}):
         
         if(inference_conf is None):
             inference_conf = {}
@@ -43,8 +43,8 @@ class ClassifierEmbedding:
         inference_conf.setdefault('shuffle',False)
         inference_conf.setdefault('device','cpu')
         
-        device = inference_conf['device']
-        data_loader = DataLoader(dataset=dataset,batch_size= inference_conf['batch_size'], shuffle=inference_conf['shuffle'])
+        device = inference_conf.device
+        data_loader = DataLoader(dataset=dataset,batch_size= inference_conf.batch_size, shuffle=inference_conf.shuffle)
 
         model = model.to(device)
         

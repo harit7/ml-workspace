@@ -15,10 +15,10 @@ class ClassfierInference:
         #inference_conf.setdefault('device','cpu')
         #self.logger.info("Running inference on {}".format(inference_conf['device']))
 
-        device = inference_conf['device']
+        device = inference_conf.device
         data_loader = DataLoader(dataset=dataset,
-                                  batch_size= inference_conf['batch_size'], 
-                                  shuffle=inference_conf['shuffle'],
+                                  batch_size= inference_conf.batch_size, 
+                                  shuffle=inference_conf.shuffle,
                                   pin_memory=True, 
                                   num_workers=2)
         model = model.to(device)

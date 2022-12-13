@@ -15,19 +15,19 @@ class ModelTraining:
         
         self.optimizer = None 
 
-        opt_name = train_params['optimizer_name']
+        opt_name = train_params.optimizer_name
 
         if(opt_name=='adam'):        
-            optimizer = optim.Adam(model.parameters(), lr=train_params['learning_rate'],
-                                    weight_decay= train_params['weight_decay']
+            optimizer = optim.Adam(model.parameters(), lr=train_params.learning_rate,
+                                    weight_decay= train_params.weight_decay
                                     )
         if(opt_name == 'lbfgs'):
             optimizer = torch.optim.LBFGS(model.parameters())
         
         else:
-            optimizer = optim.SGD(model.parameters(), lr = train_params['learning_rate'], 
-                                momentum= train_params['momentum'], 
-                                weight_decay= train_params['weight_decay'])
+            optimizer = optim.SGD(model.parameters(), lr = train_params.learning_rate, 
+                                momentum= train_params.momentum, 
+                                weight_decay= train_params.weight_decay)
 
         self.optimizer  = optimizer 
 
@@ -44,6 +44,7 @@ class ModelTraining:
         train_params.setdefault('device','cpu')
         train_params.setdefault('stopping_criterion','max_epochs')
         train_params.setdefault('log_val_err',False)
+        train_params.setdefault('train_err_tol',0.001) #default less than 0.1%
 
         # set this to 0 to disable loss prints with batches.
         train_params.setdefault('log_batch_loss_freq',20) 
@@ -53,7 +54,7 @@ class ModelTraining:
         
         logger = self.logger 
 
-        device = train_params['device']
+        device = train_params.device
         
         epoch_loss = 0
         num_pts = len(train_data_loader.dataset)
@@ -63,7 +64,7 @@ class ModelTraining:
         model = model.to(device)
         
       
-        log_batch_loss_freq = train_params['log_batch_loss_freq']
+        log_batch_loss_freq = train_params.log_batch_loss_freq
         y_hat = []
         y_true = []
         
@@ -75,9 +76,17 @@ class ModelTraining:
             out     = model.forward(data)
             probs   = out['probs']
             logits  = out['logits']
+            
+            #print(probs[0])
+            #print(logits[0])
+            #print(sum(probs[0]))
+
             #loss    = model.criterion(probs, target) 
             # it expects unnormalized scores. internally converts to probs.
+            #print(target[0])
+            
             loss    = model.criterion(logits, target) 
+            
             loss.backward()    # compute gradient
             #loss2 = model.criterion(probs,target)
             #loss2.backward()
@@ -93,11 +102,14 @@ class ModelTraining:
 
             self.optimizer.step()             
             epoch_loss += loss.item()
+            #print('loss',loss.item())
 
         training_err = 1-accuracy_score(y_hat,y_true)
         epoch_loss= epoch_loss/num_pts
         
-        if(train_params['normalize_weights']):
+        #print('num pts',num_pts)
+
+        if(train_params.normalize_weights):
             model.normalize_weights()
 
         return epoch_loss, training_err
@@ -112,8 +124,8 @@ class ModelTraining:
         self.set_defaults(train_params)
 
         train_data_loader = DataLoader( dataset=dataset,
-                                        batch_size= train_params['batch_size'], 
-                                        shuffle=train_params['shuffle'],
+                                        batch_size= train_params.batch_size, 
+                                        shuffle=train_params.shuffle,
                                         pin_memory=True,
                                         num_workers=2)
 
@@ -130,14 +142,14 @@ class ModelTraining:
 
         logger.debug('Using stopping criterion {}'.format(stop_crit))
 
-        inf_conf = {'device':train_params['device'],'batch_size':128,'shuffle':False}
+        inf_conf = {'device':train_params.device,'batch_size':128,'shuffle':False}
         
         if(self.optimizer is None):
             self.init_optimizer(model,train_params) 
 
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=100)
 
-        while(epoch< train_params['max_epochs']):
+        while(epoch< train_params.max_epochs):
             logger.debug('------------------------------------------------------')
             logger.debug('Training Epoch {} Begins '.format(epoch))
 
@@ -152,20 +164,23 @@ class ModelTraining:
             
             stop = False 
 
-            if(stop_crit=='max_epochs' and epoch> train_params['max_epochs']):
+            if(training_err <= train_params.train_err_tol):
+                stop = True 
+
+            if(stop_crit=='max_epochs' and epoch> train_params.max_epochs):
                 stop = True 
                 
-            if(train_params['log_val_err'] and epoch%5==0):
+            if(train_params.log_val_err and epoch%5==0):
                 val_err  = self.get_validation_error(model,val_set,inf_conf)
                 logger.debug('Epoch:{} Validation Error:{}'.format(epoch,val_err))
             
-            if(train_params['stopping_criterion']=='val_err_threshold'):
+            if(train_params.stopping_criterion=='val_err_threshold'):
                 val_err  = self.get_validation_error(model,val_set,inf_conf)
-                if(val_err <= train_params['val_err_threshold']):
+                if(val_err <= train_params.val_err_threshold):
                     stop= True 
                 logger.debug('Epoch:{} Validation Error:{}'.format(epoch,val_err))
 
-            if(stop_crit == 'loss_tol' and epoch_loss <= train_params['loss_tol']):
+            if(stop_crit == 'loss_tol' and epoch_loss <= train_params.loss_tol):
                 stop = True 
             
             if(stop):    

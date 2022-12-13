@@ -1,4 +1,3 @@
-
 def set_defaults(conf):
 
     '''
@@ -10,19 +9,21 @@ def set_defaults(conf):
     
     conf.setdefault("inference_conf",{"device":"cpu","shuffle":False})
 
-    conf.setdefault("store_model_weights_in_mem",False)
-    conf.setdefault("dump_result",False)
+    
 
     train_conf = conf['training_conf']
     train_conf.setdefault('device',conf['device'])
-    train_conf.setdefault('store_embedding',False)
+    
     train_conf.setdefault('ckpt_load_path',None)
-    train_conf.setdefault('save_ckpt',False)
+    train_conf.setdefault('ckpt_save_path',None)
+    train_conf.setdefault('embedding_save_path',None)
+    
     
     if(conf['inference_conf'] is None):
         conf['inference_conf'] = {}
 
-    conf['inference_conf'].setdefault('device',conf['device'])
+    conf['inference_conf'].setdefault('device',conf['device']) 
 
 
-
+    
+ 

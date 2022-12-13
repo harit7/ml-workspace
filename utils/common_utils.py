@@ -3,7 +3,7 @@ import re
 import torch 
 import numpy as np
 import random 
-
+from omegaconf import OmegaConf
 
 def set_seed(seed):
     random.seed(seed)
@@ -16,7 +16,7 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
     #torch.use_deterministic_algorithms(True)
 
-def load_yaml_config(file_path):
+def load_yaml_config_std(file_path):
     al_conf = None 
     loader = yaml.SafeLoader
     loader.add_implicit_resolver(
@@ -35,3 +35,9 @@ def load_yaml_config(file_path):
         print(exc)
     
     return al_conf 
+
+def load_yaml_config_omega(file_path):
+    config = OmegaConf.load(file_path)
+    return config 
+
+

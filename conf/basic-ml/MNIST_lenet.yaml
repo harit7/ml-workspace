@@ -2,8 +2,6 @@
 device: "cuda:0"
 random_seed : 1
 
-log_file_path: '../logs/temp.log'
-
 data_conf: 
   dataset: "mnist"
   dimension: 784
@@ -31,14 +29,14 @@ training_conf:
   
   #stopping_criterion: "val_err_threshold"
   #val_err_threshold: 0.05
-
-  ckpt_load_path: None  
-  ckpt_save_path: None
-  train_from_scratch: True
-  train_from_ckpt: False
+  ckpt_load_path: null    
 
 inference_conf:
-  device: "cuda:0"
   shuffle: False
   batch_size: 512
+
+
+output:
+  log_file_path: '${base_dir}/outputs/logs/temp.log'
+
 
